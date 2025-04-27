@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能充電樁監測系統</title>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 40px;
+      background-color: #fff;
+      border-bottom: 1px solid #ddd;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 600;
+      color: #222;
+    }
+    header .user {
+      font-size: 15px;
+      color: #333;
+    }
+    .controls {
+      text-align: right;
+      padding: 0 40px 10px;
+    }
+    .controls button {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background-color: #3B82F6;
+      color: white;
+      cursor: pointer;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      padding: 20px 40px 40px;
+      gap: 24px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      padding: 18px 20px;
+      width: 200px;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.02);
+    }
+    .card h2 {
+      font-size: 17px;
+      margin: 0 0 12px;
+      color: #111;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: 500;
+      font-size: 15px;
+      color: #333;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    .blue { background-color: #3B82F6; }
+    .green { background-color: #22C55E; }
+    .red { background-color: #EF4444; }
+    .info {
+      font-size: 14px;
+      color: #444;
+      margin: 4px 0;
+    }
+    .progress {
+      height: 6px;
+      background-color: #eee;
+      border-radius: 3px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .progress-inner {
+      height: 100%;
+      background-color: #3B82F6;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>智能充電樁監測系統</h1>
+    <div class="user">管理員 ｜ <a href="#">登出</a></div>
+  </header>
+
+  <div class="controls">
+    <button onclick="fetchChargers()">手動刷新</button>
+  </div>
+
+  <main class="container" id="charger-container">
+    <!-- 卡片會由JS產生 -->
+  </main>
+
+  <script>
+    const API_URL = 'https://example.com/api/chargers';
+
+    function createCard(charger) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const statusMap = {
+        'in_use': { text: '使用中', color: 'blue' },
+        'idle': { text: '閒置', color: 'green' },
+        'fault': { text: '故障', color: 'red' }
+      };
+
+      const status = statusMap[charger.status] || { text: charger.status, color: 'gray' };
+      const user = charger.user ? charger.user : '－';
+      const power = charger.power !== undefined && charger.power !== null ? `${charger.power} kW` : '－';
+      const lastUpdate = charger.updated_at ? charger.updated_at : '不明';
+      const plate = charger.plate || '－';
+      const progress = charger.progress || 0;
+
+      card.innerHTML = `
+        <h2>${charger.id}</h2>
+        <div class="status">
+          <span class="dot ${status.color}"></span>
+          ${status.text}
+        </div>
+        <div class="info">當前功率：${power}</div>
+        <div class="info">使用者：${user}</div>
+        <div class="info">車牌號碼：${plate}</div>
+        <div class="info">更新時間：${lastUpdate}</div>
+        <div class="info">充電進度：</div>
+        <div class="progress">
+          <div class="progress-inner" style="width: ${progress}%;"></div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    async function fetchChargers() {
+  try {
+    // 假資料（本地模擬）
+    const data = [
+      {
+        id: "Charger001",
+        status: "in_use",
+        power: 22.5,
+        user: "王小明",
+        plate: "ABC-1234",
+        updated_at: "2025-04-26 13:30",
+        progress: 65
+      },
+      {
+        id: "Charger002",
+        status: "idle",
+        power: 0,
+        user: null,
+        plate: "DEF-5678",
+        updated_at: "2025-04-26 13:20",
+        progress: 0
+      },
+      {
+        id: "Charger003",
+        status: "fault",
+        power: 0,
+        user: null,
+        plate: null,
+        updated_at: "2025-04-26 13:00",
+        progress: 0
+      }
+    ];
+    renderChargers(data);
+  } catch (e) {
+    console.error('API載入失敗', e);
+  }
+}
+
+
+    function renderChargers(data) {
+      const container = document.getElementById('charger-container');
+      container.innerHTML = '';
+      data.forEach(charger => {
+        container.appendChild(createCard(charger));
+      });
+    }
+
+    fetchChargers();
+    setInterval(fetchChargers, 30000); // 每30秒刷新一次
+  </script>
+</body>
+</html>
